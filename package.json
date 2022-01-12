@@ -30,7 +30,7 @@
     "file-loader": "^2.0.0",
     "intersection-observer": "^0.5.1",
     "lodash": "^4.17.11",
-    "markdown-it": "^8.4.2",
+    "markdown-it": "^12.3.2",
     "markdown-it-for-inline": "^0.1.1",
     "preact": "^8.2.6",
     "preact-cli": "^2.1.0",
