@@ -22,18 +22,18 @@
     "eslint": "^4.9.0",
     "eslint-config-synacor": "^2.0.2",
     "identity-obj-proxy": "^3.0.0",
-    "preact-cli": "^2.1.0"
+    "preact-cli": "^3.4.3"
   },
   "dependencies": {
     "body-scroll-lock": "^2.6.1",
     "emotion": "^9.2.12",
-    "file-loader": "^2.0.0",
+    "file-loader": "^6.2.0",
     "intersection-observer": "^0.5.1",
     "lodash": "^4.17.11",
     "markdown-it": "^8.4.2",
     "markdown-it-for-inline": "^0.1.1",
     "preact": "^8.2.6",
-    "preact-cli": "^2.1.0",
+    "preact-cli": "^3.4.3",
     "preact-cli-plugin-async": "^2.0.0",
     "preact-compat": "^3.17.0",
     "preact-router": "^2.6.1",
