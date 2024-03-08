@@ -16,11 +16,6 @@ import KeyboardListener from './KeyboardListener'
 import Curtain from './Curtain'
 import DelayUnmount from './DelayUnmount'
 
-// Script is loaded in HTML head
-window.SC.initialize({
-    client_id: 'e247c5d6731ba617c24462912ff16e29'
-})
-
 const arrowButtonStyle = css`
     position: absolute;
     top: 0;
