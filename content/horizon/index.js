@@ -4,7 +4,6 @@ module.exports = {
     trackID: 544630866,
     trackSecret: 's-zoQ5b',
     titleLayout: 'center',
-    audioUrl: require('./horizon.ogg'),
     backgroundVideo: require('./horizon3.mov.mp4'),
     backgroundPlaybackRate: 1,
     color: 'pink',

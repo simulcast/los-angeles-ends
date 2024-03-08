@@ -4,7 +4,6 @@ module.exports = {
     trackID: 544630851,
     trackSecret: 's-I6dWk',
     titleLayout: 'center',
-    audioUrl: require('./hov.ogg'),
     backgroundVideo: require('./hov.mov.mp4'),
     backgroundPlaybackRate: 0.75,
     color: 'red',

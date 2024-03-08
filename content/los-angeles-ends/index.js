@@ -4,7 +4,6 @@ module.exports = {
     trackID: 544630827,
     trackSecret: 's-kf9lP',
     titleLayout: 'cascade',
-    audioUrl: require('./lae.ogg'),
     backgroundVideo: require('./los-angeles-ends.mov.mp4'),
     color: 'orange',
     pinX: '68.6%',

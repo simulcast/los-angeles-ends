@@ -4,7 +4,6 @@ module.exports = {
     trackID: 548303973,
     trackSecret: 's-NvfPD',
     titleLayout: 'center',
-    audioUrl: require('./blue.ogg'),
     backgroundVideo: require('./almost-right.mp4.mp4'),
     backgroundPlaybackRate: 0.75,
     color: 'blue',

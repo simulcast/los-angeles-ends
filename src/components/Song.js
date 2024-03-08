@@ -71,8 +71,7 @@ export default class Song extends Component {
         ]
 
         this.state.currentSlideIndex = 0
-        this.state.playerState = 'playing'
-        this.audioRef = null
+        this.state.playerState = 'paused'
     }
 
     renderSlide = (slide) => {
@@ -154,42 +153,76 @@ export default class Song extends Component {
         })
         this.observer.observe(this.element)
 
-        this.audioRef.addEventListener('timeupdate', this.onAudioTimeUpdate)
-        this.audioRef.addEventListener('ended', this.onAudioEnded)
-        this.audioRef.addEventListener('play', this.onAudioPlay)
-        this.audioRef.addEventListener('pause', this.onAudioPause)
+        SC.stream(`/tracks/${this.props.song.trackID}`, this.props.song.trackSecret || null).then(player => {
+            this.player = player
+            const duration = this.player.getDuration()
+            this.player.on('state-change', this.onPlayerStateChange)
+            this.player.on('time', time => {
+                this.setState({
+                    playerProgress: time / this.player.getDuration()
+                })
+            })
+        }).catch(error => console.error(`Request to stream "${this.props.song.title}" failed`, {
+            ...error,
+            song: {
+                title: this.props.song.title,
+                slug: this.props.song.slug,
+                trackID: this.props.song.trackID,
+                trackSecret: this.props.song.trackSecret
+            }
+        }))
     }
 
-    onAudioTimeUpdate = () => {
-        const duration = this.audioRef.duration
-        const currentTime = this.audioRef.currentTime
-        const progress = currentTime / duration
+    onPlayerStateChange = (state) => {
+        // state is 'playing', 'paused', 'loading', 'ended', 'error' or 'dead'
+        let playerState = null
+
+        if (state === 'playing') {
+            playerState = 'playing'
+        } else if (state === 'loading') {
+            playerState = 'loading'
+        } else if (state === 'ended') {
+            // If song ends, seek back to beginning and then play again
+            playerState = 'paused'
+            this.player.seek(0).then(() => {
+                this.player.play()
+            })
+        } else {
+            playerState = 'paused'
+        }
 
         this.setState({
-            playerProgress: progress
+            playerState: playerState
         })
-    }
-
-    onAudioEnded = () => {
-        this.audioRef.currentTime = 0
-        this.audioRef.play()
     }
 
     onPlayButtonClick = () => {
         if (this.state.playerState === 'paused') {
-            this.audioRef.play()
-            this.setState({playerState: 'playing'})
+            this.player.play()
         } else if (this.state.playerState === 'playing') {
-            this.audioRef.pause()
-            this.setState({playerState: 'paused'})
+            this.player.pause()
+        } else if (this.state.playerState === 'ended') {
+            this.player.play()
         }
+    }
+
+    fadeVolume(targetVolume, duration = duration || 1.5, onComplete) {
+        const proxyObj = {volume: this.player.getVolume()}
+        TweenLite.to(proxyObj, 0.5, {
+            volume: targetVolume,
+            onUpdate: () => {
+                this.player.setVolume(proxyObj.volume)
+            },
+            onComplete: onComplete
+        })
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.isOpen !== prevProps.isOpen) {
-            if (this.audioRef) {
+            if (this.player) {
                 if (this.props.isOpen) {
-                    this.audioRef.play().then(() => {
+                    this.player.play().then(() => {
+                        this.fadeVolume(1)
                         const hashIndex = this.indexFromHash()
                         // After song starts playing, either jump to the index in the url,
                         // or to the first content slide
@@ -204,14 +237,16 @@ export default class Song extends Component {
                         // If song does not play
                         // (this happens if there has been no user interaction)
                         window.addEventListener('click', () => {
-                            this.audioRef.play()
+                            this.player.play()
                         }, {once: true})
                         window.addEventListener('touchstart', () => {
-                            this.audioRef.play()
+                            this.player.play()
                         }, {once: true})
                     })
                 } else {
-                    this.audioRef.pause()
+                    this.fadeVolume(0, 1.5, () => {
+                        this.player.pause()
+                    })
                 }
             }
             if (this.state.currentSlideIndex !== prevState.currentSlideIndex && this.props.isOpen) {
@@ -237,11 +272,7 @@ export default class Song extends Component {
     }
 
     componentWillUnmount() {
-        if (this.audioRef) {
-            this.audioRef.pause()
-            this.audioRef.removeEventListener('timeupdate', this.onAudioTimeUpdate)
-            this.audioRef.removeEventListener('ended', this.onAudioEnded)
-        }
+        if (this.player) this.player.pause()
         if (this.observer) this.observer.disconnect()
         window.removeEventListener('hashchange', this.onhashchange)
     }
@@ -539,11 +570,6 @@ export default class Song extends Component {
                         onEsc={() => route('/')}
                     />
                 }
-                <audio
-                    ref={ref => this.audioRef = ref}
-                    src={this.props.song.audioUrl}
-                    preload="auto"
-                />
             </section>
         )
     }
