@@ -4,6 +4,7 @@ module.exports = {
     trackID: 544630803,
     trackSecret: 's-qm1wH',
     titleLayout: 'center',
+    audioUrl: require('./ttw.ogg'),
     backgroundVideo: require('./windshield-zoom2.mov.mp4'),
     backgroundPlaybackRate: 0.75,
     color: 'purple',
