@@ -56,22 +56,24 @@ const ArrowButton = ({...props}) => (
 export default class Song extends Component {
     constructor(props) {
         super(props)
-        this.state.slides = [
-            {
-                type: 'title',
-                title: this.props.song.title,
-                layout: this.props.song.titleLayout,
-                slug: this.props.song.slug
-            },
-            ...this.props.song.slides,
-            {
-                type: 'end',
-                nextSong: this.props.nextSong
-            }
-        ]
-
-        this.state.currentSlideIndex = 0
-        this.state.playerState = 'paused'
+        this.state = {
+            slides: [
+                {
+                    type: 'title',
+                    title: this.props.song.title,
+                    layout: this.props.song.titleLayout,
+                    slug: this.props.song.slug
+                },
+                ...this.props.song.slides,
+                {
+                    type: 'end',
+                    nextSong: this.props.nextSong
+                }
+            ],
+            currentSlideIndex: 0,
+            playerState: 'paused',
+            showArrowCursor: false
+        }
     }
 
     renderSlide = (slide) => {
@@ -497,9 +499,9 @@ export default class Song extends Component {
                 <div
                     class="slider"
                     onclick={this.onclick}
-                    ontouchstart={this.props.isOpen && this.ontouchstart}
-                    ontouchmove={this.props.isOpen && this.ontouchmove}
-                    ontouchend={this.props.isOpen && this.ontouchmove}
+                    ontouchstart={this.props.isOpen ? this.ontouchstart : undefined}
+                    ontouchmove={this.props.isOpen ? this.ontouchmove : undefined}
+                    ontouchend={this.props.isOpen ? this.ontouchmove : undefined}
                     onmouseenter={() =>
                         this.setState({
                             showArrowCursor: true

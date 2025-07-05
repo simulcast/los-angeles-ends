@@ -51,27 +51,35 @@ const ArrowButton = ({...props}) => (
 export default class Song extends Component {
     constructor(props) {
         super(props)
-        this.state.slides = [
-            {
-                type: 'title',
-                title: this.props.song.title,
-                layout: this.props.song.titleLayout,
-                slug: this.props.song.slug
-            },
-            ...this.props.song.slides,
-            {
-                type: 'end',
-                nextSong: this.props.nextSong
-            }
-        ]
-
-        this.state.currentSlideIndex = 0
-        this.state.playerState = 'playing'
+        this.state = {
+            slides: [
+                {
+                    type: 'title',
+                    title: this.props.song.title,
+                    layout: this.props.song.titleLayout,
+                    slug: this.props.song.slug
+                },
+                ...this.props.song.slides,
+                {
+                    type: 'end',
+                    nextSong: this.props.nextSong
+                }
+            ],
+            currentSlideIndex: 0,
+            playerState: 'playing',
+            showArrowCursor: false
+        }
         this.audioRef = null
     }
 
     renderSlide = (slide) => {
         const isCurrent = this.state.slides[this.state.currentSlideIndex] === slide
+        console.log(`🎨 renderSlide called:`, {
+            slideType: slide.type,
+            isCurrent,
+            currentSlideIndex: this.state.currentSlideIndex,
+            songTitle: this.props.song.title
+        })
 
         if (slide.type === 'title') {
             return (
@@ -141,6 +149,8 @@ export default class Song extends Component {
     }
 
     componentDidMount() {
+        console.log(`🎵 Song ${this.props.song.title} mounted - isOpen:`, this.props.isOpen)
+        
         window.addEventListener('hashchange', this.onhashchange)
 
         // Play or pause the video when it enters or leaves the viewport
@@ -149,23 +159,31 @@ export default class Song extends Component {
         })
         this.observer.observe(this.element)
 
-        this.audioRef.addEventListener('timeupdate', this.onAudioTimeUpdate)
-        this.audioRef.addEventListener('ended', this.onAudioEnded)
-        this.audioRef.addEventListener('play', this.onAudioPlay)
-        this.audioRef.addEventListener('pause', this.onAudioPause)
+        if (this.audioRef) {
+            this.audioRef.addEventListener('timeupdate', this.onAudioTimeUpdate)
+            this.audioRef.addEventListener('ended', this.onAudioEnded)
+            this.audioRef.addEventListener('play', this.onAudioPlay)
+            this.audioRef.addEventListener('pause', this.onAudioPause)
+        }
     }
 
     onAudioTimeUpdate = () => {
+        if (!this.audioRef) return
+        
         const duration = this.audioRef.duration
         const currentTime = this.audioRef.currentTime
         const progress = currentTime / duration
 
-        this.setState({
-            playerProgress: progress
-        })
+        if (!isNaN(progress)) {
+            this.setState({
+                playerProgress: progress
+            })
+        }
     }
 
     onAudioEnded = () => {
+        if (!this.audioRef) return
+        
         this.audioRef.currentTime = 0
         this.audioRef.play()
     }
@@ -181,9 +199,17 @@ export default class Song extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        console.log(`🎵 Song ${this.props.song.title} updated:`, {
+            isOpen: { prev: prevProps.isOpen, current: this.props.isOpen },
+            currentSlideIndex: { prev: prevState.currentSlideIndex, current: this.state.currentSlideIndex },
+            slidesCount: this.state.slides.length
+        })
+
         if (this.props.isOpen !== prevProps.isOpen) {
+            console.log(`🎵 Song ${this.props.song.title} isOpen changed from ${prevProps.isOpen} to ${this.props.isOpen}`)
             if (this.audioRef) {
                 if (this.props.isOpen) {
+                    console.log(`🎵 Starting audio for ${this.props.song.title}`)
                     this.audioRef.play().then(() => {
                         const hashIndex = this.indexFromHash()
                         // After song starts playing, either jump to the index in the url,
@@ -243,7 +269,7 @@ export default class Song extends Component {
 
     indexFromHash() {
         const index = Number(window.location.hash.substring(1))
-        if (index !== NaN && index <= this.state.slides.length - 1) {
+        if (!isNaN(index) && index <= this.state.slides.length - 1) {
             return index
         } else {
             return null
@@ -461,9 +487,9 @@ export default class Song extends Component {
                 <div
                     class="slider"
                     onclick={this.onclick}
-                    ontouchstart={this.props.isOpen && this.ontouchstart}
-                    ontouchmove={this.props.isOpen && this.ontouchmove}
-                    ontouchend={this.props.isOpen && this.ontouchmove}
+                    ontouchstart={this.props.isOpen ? this.ontouchstart : undefined}
+                    ontouchmove={this.props.isOpen ? this.ontouchmove : undefined}
+                    ontouchend={this.props.isOpen ? this.ontouchmove : undefined}
                     onmouseenter={() =>
                         this.setState({
                             showArrowCursor: true
@@ -471,22 +497,36 @@ export default class Song extends Component {
                     }
                     onmouseleave={() =>
                         this.setState({
-                            showArrowCursor: true
+                            showArrowCursor: false
                         })
                     }
                 >
-                    {this.state.slides.map( slide => {
+                    {this.state.slides.map( (slide, index) => {
                         if (slide.type === 'title') {
+                            console.log(`🎨 Rendering slide ${index} (${slide.type}) for ${this.props.song.title}:`, {
+                                isOpen: this.props.isOpen,
+                                slideType: slide.type,
+                                willDelayUnmount: false
+                            })
                             return this.renderSlide(slide)
-                        } else {
+                        } else if (this.props.isOpen) {
+                            console.log(`🎨 Rendering slide ${index} (${slide.type}) for ${this.props.song.title}:`, {
+                                isOpen: this.props.isOpen,
+                                slideType: slide.type,
+                                willDelayUnmount: true
+                            })
                             return (
                                 <DelayUnmount
+                                    key={`slide-${index}`}
                                     unmountDelay={400}
                                     mount={this.props.isOpen}
                                 >
                                     {this.renderSlide(slide)}
                                 </DelayUnmount>
                             )
+                        } else {
+                            // No log and no render for closed songs' non-title slides
+                            return null
                         }
                     })}
                 </div>

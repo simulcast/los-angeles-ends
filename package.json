@@ -32,11 +32,10 @@
     "lodash": "^4.17.11",
     "markdown-it": "^8.4.2",
     "markdown-it-for-inline": "^0.1.1",
-    "preact": "^8.2.6",
+    "preact": "^10.26.9",
     "preact-cli": "^2.1.0",
     "preact-cli-plugin-async": "^2.0.0",
-    "preact-compat": "^3.17.0",
-    "preact-router": "^2.6.1",
+    "preact-router": "^4.1.2",
     "serve": "^10.1.1",
     "vh-check": "^2.0.5",
     "what-input": "^5.1.3",
@@ -65,9 +64,9 @@
       "\\.(css|less|scss)$": "identity-obj-proxy",
       "^./style$": "identity-obj-proxy",
       "^preact$": "<rootDir>/node_modules/preact/dist/preact.min.js",
-      "^react$": "preact-compat",
-      "^react-dom$": "preact-compat",
-      "^create-react-class$": "preact-compat/lib/create-react-class",
+      "^react$": "preact/compat",
+      "^react-dom$": "preact/compat",
+      "^create-react-class$": "preact/compat/lib/create-react-class",
       "^react-addons-css-transition-group$": "preact-css-transition-group"
     }
   }

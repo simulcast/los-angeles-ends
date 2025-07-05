@@ -26,6 +26,15 @@ const style = css`
 `
 
 export default class ArrowCursor extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            x: 0,
+            y: 0,
+            rotation: 0
+        }
+    }
+
     componentDidMount() {
         window.addEventListener('mousemove', this.onmousemove)
     }
@@ -41,7 +50,7 @@ export default class ArrowCursor extends Component {
     }
 
     componentWillUnmount() {
-        window.addEventListener('mousemove', this.onmousemove)
+        window.removeEventListener('mousemove', this.onmousemove)
     }
 
     render() {
