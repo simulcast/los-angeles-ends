@@ -24,12 +24,15 @@ import KeyboardListener from './KeyboardListener'
 export default class App extends Component {
     constructor(props) {
         super(props)
-        this.state.songs = content.songs
-        this.state.currentSong = null
-        this.state.initialRender = true
-        this.state.playBackgrounds = true
-        this.state.allowScroll = true
-        this.state.splashActive = false
+        this.state = {
+            songs: content.songs,
+            currentSong: null,
+            initialRender: true,
+            playBackgrounds: true,
+            allowScroll: true,
+            splashActive: false,
+            showArrowCursor: false
+        }
         this.cacheInnerHeight()
     }
 
@@ -58,7 +61,14 @@ export default class App extends Component {
     }
 
     handleRoute = (e) => {
+        console.log('🚀 handleRoute called:', {
+            url: e.url,
+            currentSong: this.state.currentSong ? this.state.currentSong.slug : null,
+            state: this.state
+        })
+
         if (e.url === '/') {
+            console.log('📍 Route: Home - clearing currentSong')
             this.setState({
                 currentSong: null,
                 // handleRoute never gets called on the first render,
@@ -66,47 +76,76 @@ export default class App extends Component {
                 splashActive: false
             })
         } else if (e.url === '/end-credits') {
+            console.log('📍 Route: End credits - redirecting to home')
             route('/', true)
             setTimeout(() => {
                 this.scrollToElement(document.querySelector('.LinerNotes'))
             }, 500)
         } else {
-            const matchingSong = this.state.songs.find(song => song.slug === e.current.attributes.songSlug)
-            if (matchingSong) {
-                if (this.state.currentSong && matchingSong !== this.state.currentSong) {
-                    // If there's already a song open
-                    // First close the song
-                    route('/', true)
-
-                    setTimeout(() => {
-                        // Then, go to next song
-                        route(`/${matchingSong.slug}`, true)
-                    }, 500)
-                } else {
+            // Extract songSlug from URL
+            const urlPath = e.url || ''
+            const songSlug = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath
+            console.log('📍 Route: Song page', { urlPath, songSlug })
+            
+            const matchingSong = this.state.songs.find(song => song.slug === songSlug)
+            console.log('🎵 Found matching song:', matchingSong ? matchingSong.title : 'NOT FOUND')
+            
+            if (matchingSong && matchingSong !== this.state.currentSong) {
+                console.log('✅ Setting new currentSong:', matchingSong.title)
+                // Set the new song (or switch from another song)
+                this.setState({
+                    currentSong: matchingSong,
+                    splashActive: false
+                }, () => {
+                    console.log('✅ setState callback - currentSong is now:', this.state.currentSong.title)
+                })
+                
+                // Try to scroll to the song element, but don't break if it fails
+                try {
                     const songElement = document.querySelector(`.Song#${matchingSong.slug}`)
-                    this.scrollToElement(songElement, () => {
-                        this.setState({
-                            currentSong: matchingSong,
-                            splashActive: false
-                        })
-                    })
+                    console.log('🎯 Song element found:', !!songElement)
+                    if (songElement) {
+                        this.scrollToElement(songElement)
+                    }
+                } catch (error) {
+                    console.warn('Scroll to element failed:', error)
                 }
+            } else if (matchingSong === this.state.currentSong) {
+                console.log('⚠️ Same song already open, no action needed')
+            } else {
+                console.log('❌ No matching song found for slug:', songSlug)
             }
         }
     }
 
     // Reusable method to scroll to an element at a constant speed
     scrollToElement(element, onComplete, pixelsPerSec = 1500, maxDuration = 2) {
-        const currentScroll = document.scrollingElement.scrollTop
-        const targetScroll = utils.offset(element).top
-        const delta = Math.abs(targetScroll - currentScroll)
-        const duration = Math.min(delta / pixelsPerSec, maxDuration)
+        if (!element || !document.scrollingElement) {
+            if (onComplete) onComplete()
+            return
+        }
+        
+        try {
+            const currentScroll = document.scrollingElement.scrollTop
+            const targetScroll = utils.offset(element).top
+            const delta = Math.abs(targetScroll - currentScroll)
+            const duration = Math.min(delta / pixelsPerSec, maxDuration)
 
-        TweenLite.to( document.scrollingElement, duration, {
-            scrollTop: targetScroll,
-            ease: Sine.easeInOut,
-            onComplete: onComplete
-        })
+            if (window.TweenLite) {
+                TweenLite.to(document.scrollingElement, duration, {
+                    scrollTop: targetScroll,
+                    ease: window.Sine ? window.Sine.easeInOut : 'power2.inOut',
+                    onComplete: onComplete
+                })
+            } else {
+                // Fallback if TweenLite is not available
+                document.scrollingElement.scrollTop = targetScroll
+                if (onComplete) onComplete()
+            }
+        } catch (error) {
+            console.warn('ScrollToElement error:', error)
+            if (onComplete) onComplete()
+        }
     }
 
     enterNearestSong() {
